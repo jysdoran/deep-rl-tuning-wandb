@@ -81,7 +81,15 @@ class ValueIteration(MDPSolver):
         """
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        V_old = np.full_like(V, theta + 1)
+        while np.abs(V_old - V).max() > theta:
+            V_old = V
+            next_state_v = self.mdp.R + self.gamma * V_old
+            # p(s'|s,a) * (r|s,a,s' + V(s'))
+            unsummed = next_state_v * self.mdp.P
+            expected_by_a_s = unsummed.sum(axis=2)
+            V = expected_by_a_s.max(axis=1)
+
         return V
 
     def _calc_policy(self, V: np.ndarray) -> np.ndarray:
@@ -103,7 +111,13 @@ class ValueIteration(MDPSolver):
         """
         policy = np.zeros([self.state_dim, self.action_dim])
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        next_state_v = self.mdp.R + self.gamma * V
+        # p(s'|s,a) * (r|s,a,s' + V(s'))
+        unsummed = next_state_v * self.mdp.P
+        expected_by_a_s = unsummed.sum(axis=2)
+        best_a_per_s = expected_by_a_s.argmax(axis=1)
+        policy[np.arange(len(V)), best_a_per_s] = 1.0
+
         return policy
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:
@@ -150,7 +164,14 @@ class PolicyIteration(MDPSolver):
         """
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        V_old = np.full_like(V, self.theta + 1)
+        while np.abs(V_old - V).max() > self.theta:
+            V_old = V
+            next_state_v = self.mdp.R + self.gamma * V_old
+            # p(s'|s,a) * (r|s,a,s' + V(s'))
+            unsummed = next_state_v * self.mdp.P * policy[:, :, np.newaxis]
+            V = unsummed.sum(axis=(1, 2))
+
         return np.array(V)
 
     def _policy_improvement(self) -> Tuple[np.ndarray, np.ndarray]:
@@ -175,7 +196,21 @@ class PolicyIteration(MDPSolver):
         policy = np.zeros([self.state_dim, self.action_dim])
         V = np.zeros([self.state_dim])
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q1")
+        n_states = len(V)
+        policy_old = policy + 1
+        while np.any(policy_old != policy):
+            policy_old = policy
+            policy = np.zeros_like(policy)
+            V = self._policy_eval(policy_old)
+
+            # Make policy greedy wrt. to V (as in Value Iteration)
+            next_state_v = self.mdp.R + self.gamma * V
+            # p(s'|s,a) * (r|s,a,s' + V(s'))
+            unsummed = next_state_v * self.mdp.P
+            expected_by_a_s = unsummed.sum(axis=2)
+            best_a_per_s = expected_by_a_s.argmax(axis=1)
+            policy[np.arange(n_states), best_a_per_s] = 1.0
+
         return policy, V
 
     def solve(self, theta: float = 1e-6) -> Tuple[np.ndarray, np.ndarray]:

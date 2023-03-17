@@ -230,3 +230,8 @@ $RECYCLE.BIN/
 
 # Windows shortcuts
 *.lnk
+
+venv
+.idea
+*.pdf
+*.tfevents.*

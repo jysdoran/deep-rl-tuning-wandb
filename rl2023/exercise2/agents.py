@@ -14,12 +14,12 @@ class Agent(ABC):
     """
 
     def __init__(
-        self,
-        action_space: Space,
-        obs_space: Space,
-        gamma: float,
-        epsilon: float,
-        **kwargs
+            self,
+            action_space: Space,
+            obs_space: Space,
+            gamma: float,
+            epsilon: float,
+            **kwargs
     ):
         """Constructor of base agent for Q-Learning
 
@@ -54,9 +54,13 @@ class Agent(ABC):
         :return (int): index of selected action
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        if random.random() > self.epsilon:
+            # Greedy
+            action = max(range(self.action_space.n), key=lambda a: self.q_table[(obs, a)])
+        else:
+            action = self.action_space.sample()
         ### RETURN AN ACTION HERE ###
-        return -1
+        return action
 
     @abstractmethod
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -91,7 +95,7 @@ class QLearningAgent(Agent):
         self.alpha: float = alpha
 
     def learn(
-        self, obs: int, action: int, reward: float, n_obs: int, done: bool
+            self, obs: int, action: int, reward: float, n_obs: int, done: bool
     ) -> float:
         """Updates the Q-table based on agent experience
 
@@ -105,7 +109,10 @@ class QLearningAgent(Agent):
         :return (float): updated Q-value for current observation-action pair
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        target = reward + self.gamma * max(self.q_table[(n_obs, a)] for a in range(self.action_space.n))
+        current = self.q_table[(obs, action)]
+        self.q_table[(obs, action)] = current + self.alpha * (target - current)
+
         return self.q_table[(obs, action)]
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
@@ -137,7 +144,7 @@ class MonteCarloAgent(Agent):
         self.sa_counts = {}
 
     def learn(
-        self, obses: List[int], actions: List[int], rewards: List[float]
+            self, obses: List[int], actions: List[int], rewards: List[float]
     ) -> Dict:
         """Updates the Q-table based on agent experience
 
@@ -154,7 +161,20 @@ class MonteCarloAgent(Agent):
         """
         updated_values = {}
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q2")
+        G = 0
+        sampled_values = {}
+        for obs, action, reward in reversed(list(zip(obses, actions, rewards))):
+            G = reward + self.gamma * G
+            sampled_values[(obs, action)] = G
+
+        for s_a_pair, q_est in sampled_values.items():
+            n = self.sa_counts.setdefault(s_a_pair, 0)
+            self.sa_counts[s_a_pair] += 1
+
+            new_average = (q_est + n * self.q_table[s_a_pair]) / (n + 1)
+            updated_values[s_a_pair] = new_average
+            self.q_table[s_a_pair] = new_average
+
         return updated_values
 
     def schedule_hyperparameters(self, timestep: int, max_timestep: int):
