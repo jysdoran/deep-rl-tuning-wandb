@@ -205,24 +205,33 @@ class DQN(Agent):
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
 
+        r = timestep / max_timestep
         def epsilon_linear_decay(*args, **kwargs):
             ### PUT YOUR CODE HERE ###
-            raise(NotImplementedError)
+            # r = timestep / max_timestep
+            if r < self.exploration_fraction:
+                return self.epsilon_start + r * (self.epsilon_min - self.epsilon_start) / self.exploration_fraction
+            else:
+                return self.epsilon_min
 
         def epsilon_exponential_decay(*args, **kwargs):
             ### PUT YOUR CODE HERE ###
-            raise(NotImplementedError)
+            if self.epsilon > self.epsilon_min:
+                new_epsilon = np.float_power(self.epsilon_exponential_decay_factor, r) * self.epsilon_start
+                return max(new_epsilon, self.epsilon_min)
+            else:
+                return self.epsilon_min
 
         if self.epsilon_decay_strategy == "constant":
             pass
         elif self.epsilon_decay_strategy == "linear":
             # linear decay
             ### PUT YOUR CODE HERE ###
-            self.epsilon = epsilon_linear_decay(...)
+            self.epsilon = epsilon_linear_decay()
         elif self.epsilon_decay_strategy == "exponential":
             # exponential decay
             ### PUT YOUR CODE HERE ###
-            self.epsilon = epsilon_exponential_decay(...)
+            self.epsilon = epsilon_exponential_decay()
         else:
             raise ValueError("epsilon_decay_strategy must be either 'constant', 'linear' or 'exponential'")
 
