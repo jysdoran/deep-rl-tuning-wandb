@@ -242,7 +242,7 @@ if __name__ == "__main__":
         config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
         results = []
         for config in config_list:
-            run = Run(config)
+            run = Run(config, tags=["Q3", "Deep Q-Network"])
             hparams_values = '_'.join([':'.join([key, str(config[key])]) for key in swept_params])
             run.run_name = hparams_values
             print(f"\nStarting new run...")

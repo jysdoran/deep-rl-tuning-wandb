@@ -235,3 +235,4 @@ venv
 .idea
 *.pdf
 *.tfevents.*
+wandb/

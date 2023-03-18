@@ -7,7 +7,7 @@ from torch import Tensor
 from torch.distributions.categorical import Categorical
 import torch.nn
 from torch.optim import Adam
-from typing import Dict, Iterable, List
+from typing import Dict, Iterable, List, Tuple
 
 from rl2023.exercise3.networks import FCNetwork
 from rl2023.exercise3.replay import Transition
@@ -143,6 +143,8 @@ class DQN(Agent):
             )
 
         self.critics_target = deepcopy(self.critics_net)
+        # Disable gradient calculations for target network
+        self.critics_target.requires_grad_(False)
 
         self.critics_optim = Adam(
             self.critics_net.parameters(), lr=learning_rate, eps=1e-3
@@ -238,7 +240,15 @@ class DQN(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        if explore and np.random.random_sample() < self.epsilon:
+            # Random
+            action = self.action_space.sample()
+        else:
+            # Greedy
+            with torch.no_grad():
+                action = self.critics_net(Tensor(obs).unsqueeze(0)).argmax(axis=-1).item()
+            # action = self.q_max(obs[np.newaxis, :], self.critics_net)[1].squeeze(0).item()
+        return action
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -253,8 +263,35 @@ class DQN(Agent):
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
-        q_loss = 0.0
+        states, actions, next_states, rewards, done = batch
+
+        # Compute the target Q value
+
+        # target_vals, target_argmaxes = self.q_max(next_states, self.critics_target)
+        # target_q_best = target_vals[range(self.batch_size), target_argmaxes]
+        target_vals = self.critics_target(next_states)
+        target_q_max = target_vals.max(axis=-1).values
+
+        # Calculate the loss
+        net_vals = self.critics_net(states)
+        # net_q_taken = net_vals[range(self.batch_size), actions.squeeze(-1).numpy()]
+        net_q_taken = net_vals[range(self.batch_size), actions.squeeze(-1).numpy()]
+
+
+        errors = rewards.squeeze(-1) + self.gamma * (1 - done.squeeze(-1)) * target_q_max - net_q_taken
+        loss_mse = errors.square().mean()
+
+        self.critics_optim.zero_grad()
+        loss_mse.backward()
+        self.critics_optim.step()
+
+        q_loss = loss_mse.item()
+
+        # Update target network every target_update_freq times
+        self.update_counter += 1
+        if self.update_counter % self.target_update_freq == 0:
+            self.critics_target.hard_update(self.critics_net)
+
         return {"q_loss": q_loss}
 
 
@@ -341,7 +378,14 @@ class Reinforce(Agent):
         :return (sample from self.action_space): action the agent should perform
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
+        with torch.no_grad():
+            distribution = self.policy(Tensor(obs).unsqueeze(0)).squeeze(0)
+        if explore:
+            action = Categorical(distribution).sample().item()
+        else:
+            action = distribution.argmax().item()
+
+        return action
 
     def update(
         self, rewards: List[float], observations: List[np.ndarray], actions: List[int],
@@ -357,6 +401,23 @@ class Reinforce(Agent):
             losses
         """
         ### PUT YOUR CODE HERE ###
-        raise NotImplementedError("Needed for Q3")
-        p_loss = 0.0
+        # Compute the discounted returns
+        observations = np.array(observations)
+        actions = np.array(actions)
+        n = len(observations)
+
+        returns = Tensor(rewards)
+        returns.requires_grad = False
+        for i in range(len(returns) - 2, -1, -1):
+            returns[i] += self.gamma * returns[i + 1]
+
+        # Compute the loss
+        action_probs = self.policy(Tensor(observations))[range(n), actions]
+        loss = (-action_probs.log() * returns).mean()
+
+        self.policy_optim.zero_grad()
+        loss.backward()
+        self.policy_optim.step()
+
+        p_loss = loss.item()
         return {"p_loss": p_loss}

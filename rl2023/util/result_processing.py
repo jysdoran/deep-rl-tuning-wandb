@@ -1,11 +1,15 @@
 import numpy as np
+import wandb
 from typing import Dict, List, Tuple
 from collections import defaultdict
+
+WANDB_MODE = ("disabled", "online")[1]
+WANDB_PROJECT = "rl-coursework"
 
 
 class Run:
 
-    def __init__(self, config: Dict):
+    def __init__(self, config: Dict, tags: List[str] = None):
         self._config = config
         self._run_name = None
 
@@ -18,9 +22,24 @@ class Run:
         self._all_eval_timesteps = []
         self._all_returns = []
 
-    def update(self, eval_returns, eval_timesteps, times=None, run_data=None):
+        self._tags = tags if tags is not None else []
 
-        self._run_ids.append(len(self._run_ids))
+    def update(self, eval_returns, eval_timesteps, times=None, run_data=None):
+        run_id = len(self._run_ids)
+
+        with wandb.init(project=WANDB_PROJECT, mode=WANDB_MODE, config=self._config, tags=self._tags,
+                        reinit=True) as run:
+            run.name = self._run_name
+            run.config["run_id"] = run_id
+
+            if times is not None:
+                for step, mean_return, time in zip(eval_timesteps, eval_returns, times):
+                    wandb.log({"Mean Eval Return": mean_return, "Time": time}, step=step)
+            else:
+                for step, mean_return in zip(eval_timesteps, eval_returns):
+                    wandb.log({"Mean Eval Return": mean_return}, step=step)
+
+        self._run_ids.append(run_id)
         if self._config['save_filename'] is not None:
             self._agent_weights_filenames.append(self._config['save_filename'])
             self._config['save_filename'] = None
@@ -107,7 +126,7 @@ def rank_runs(runs: List[Run]):
     return sorted(runs, key=lambda x: x.final_return_mean, reverse=True)
 
 
-def get_best_saved_run(runs:List[Run]) -> Tuple[Run, str]:
+def get_best_saved_run(runs: List[Run]) -> Tuple[Run, str]:
     """Returns the run with the highest mean final return and the filename of the saved weights of its highest scoring
     seed, if it exists."""
 
