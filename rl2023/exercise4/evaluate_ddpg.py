@@ -7,8 +7,8 @@ from rl2023.exercise4.train_ddpg import PENDULUM_CONFIG, BIPEDAL_CONFIG, play_ep
 
 RENDER = True
 
-CONFIG = PENDULUM_CONFIG
-# CONFIG = BIPEDAL_CONFIG
+# CONFIG = PENDULUM_CONFIG
+CONFIG = BIPEDAL_CONFIG
 
 
 def evaluate(env: gym.Env, config, output: bool = True) -> Tuple[List[float], List[float]]:

@@ -21,7 +21,7 @@ SWEEP = False # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
 NUM_SEEDS_SWEEP = 10 # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
 SWEEP_SAVE_RESULTS = True # TRUE TO SAVE SWEEP RESULTS TO A FILE
 SWEEP_SAVE_ALL_WEIGTHS = False # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
-ENV = "PENDULUM" #"PENDULUM" OR "BIPEDAL"
+ENV = "BIPEDAL" #"PENDULUM" OR "BIPEDAL"
 
 PENDULUM_CONFIG = {
     "eval_freq": 2000,
@@ -41,6 +41,7 @@ BIPEDAL_CONFIG = {
     "policy_hidden_size": [64, 64],
 }
 BIPEDAL_CONFIG.update(BIPEDAL_CONSTANTS)
+# BIPEDAL_CONFIG["eval_episodes"] = 3
 
 ### INCLUDE YOUR CHOICE OF HYPERPARAMETERS HERE ###
 BIPEDAL_HPARAMS = {
@@ -83,7 +84,7 @@ def play_episode(
                 np.array([done], dtype=np.float32),
             )
             if len(replay_buffer) >= batch_size:
-                batch = replay_buffer.sample(batch_size)
+                batch = replay_buffer.sample(batch_size, device=agent.device)
                 new_data = agent.update(batch)
                 for k, v in new_data.items():
                     ep_data[k].append(v)

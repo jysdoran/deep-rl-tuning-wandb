@@ -236,3 +236,5 @@ venv
 *.pdf
 *.tfevents.*
 wandb/
+*.pt
+*.pkl

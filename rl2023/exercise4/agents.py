@@ -46,6 +46,7 @@ class DDPG(Agent):
             critic_hidden_size: Iterable[int],
             policy_hidden_size: Iterable[int],
             tau: float,
+            batch_norm: bool = False,
             **kwargs,
     ):
         """
@@ -91,9 +92,6 @@ class DDPG(Agent):
         self.policy_optim = Adam(self.actor.parameters(), lr=policy_learning_rate, eps=1e-3)
         self.critic_optim = Adam(self.critic.parameters(), lr=critic_learning_rate, eps=1e-3)
 
-        # Make sure targets aren't trained
-        self.actor_target.requires_grad_(False)
-        self.critic_target.requires_grad_(False)
 
         # ############################################# #
         # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
@@ -113,6 +111,10 @@ class DDPG(Agent):
         # ############################### #
         # WRITE ANY AGENT PARAMETERS HERE #
         # ############################### #
+        if batch_norm:
+            self.actor_batch_norm = torch.nn.BatchNorm1d(STATE_SIZE)
+        else:
+            self.actor_batch_norm = None
 
         self.saveables.update(
             {
@@ -122,8 +124,15 @@ class DDPG(Agent):
                 "critic_target": self.critic_target,
                 "policy_optim": self.policy_optim,
                 "critic_optim": self.critic_optim,
+                "actor_batch_norm": self.actor_batch_norm,
             }
         )
+
+        # GPU support
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        for k, model in self.saveables.items():
+            if not k.endswith("optim") and model is not None:
+                model.to(self.device)
 
 
     def save(self, path: str, suffix: str = "") -> str:
@@ -184,11 +193,16 @@ class DDPG(Agent):
         """
         ### PUT YOUR CODE HERE ###
         with torch.no_grad():
-            action = self.actor(Tensor(obs))
+            state = Tensor(obs).unsqueeze(0).to(self.device)
+            if self.actor_batch_norm is not None:
+                self.actor_batch_norm.eval()
+                state = self.actor_batch_norm(state)
+
+            action = self.actor(state).squeeze(0).to("cpu")
             if explore:
                 action += self.noise.sample()
 
-        return action.clamp(self.lower_action_bound, self.upper_action_bound)
+        return action.clamp(self.lower_action_bound, self.upper_action_bound).numpy()
 
     def update(self, batch: Transition) -> Dict[str, float]:
         """Update function for DQN
@@ -203,7 +217,15 @@ class DDPG(Agent):
         :return (Dict[str, float]): dictionary mapping from loss names to loss values
         """
         ### PUT YOUR CODE HERE ###
-        states, actions, next_states, rewards, done = batch
+        o_states, actions, next_states, rewards, done = batch
+
+        # Batch normalise states
+        if self.actor_batch_norm is not None:
+            self.actor_batch_norm.train()
+            next_states = self.actor_batch_norm(next_states)
+            states = self.actor_batch_norm(o_states)
+        else:
+            states = o_states
 
         # Update critic
         target_next_actions = self.actor_target(next_states)
@@ -218,6 +240,10 @@ class DDPG(Agent):
         # previous actor loss
         critic_loss.backward()
         self.critic_optim.step()
+
+        if self.actor_batch_norm is not None:
+            # This is repeated because backwards() erases the involved tensors
+            states = self.actor_batch_norm(o_states)
 
         # Update actor
         predicted_actions = self.actor(states)
