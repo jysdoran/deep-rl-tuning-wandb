@@ -173,6 +173,7 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
             for k, v in ep_data.items():
                 run_data[k].extend(v)
             run_data["train_ep_returns"].append(ep_return)
+            run_data["train_ep_timesteps"].append(timesteps_elapsed)
 
             if timesteps_elapsed % config["eval_freq"] < episode_timesteps:
                 eval_returns = 0

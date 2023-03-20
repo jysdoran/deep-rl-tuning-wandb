@@ -8,6 +8,8 @@ from rl2023.exercise4.train_ddpg import PENDULUM_CONFIG, BIPEDAL_CONFIG, play_ep
 RENDER = True
 
 # CONFIG = PENDULUM_CONFIG
+
+BIPEDAL_CONFIG["batch_norm"] = True
 CONFIG = BIPEDAL_CONFIG
 
 

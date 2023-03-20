@@ -129,7 +129,9 @@ class DDPG(Agent):
         )
 
         # GPU support
-        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        # turns out it's pretty slow on GPU
+        self.device = torch.device("cpu")
         for k, model in self.saveables.items():
             if not k.endswith("optim") and model is not None:
                 model.to(self.device)
@@ -161,7 +163,12 @@ class DDPG(Agent):
         save_path = os.path.join(dir_path, filename)
         checkpoint = torch.load(save_path)
         for k, v in self.saveables.items():
+            if None in (checkpoint[k], v):
+                if checkpoint[k] != v:
+                    raise ValueError("Model {} is not None in checkpoint but None in agent".format(k))
+
             v.load_state_dict(checkpoint[k].state_dict())
+
 
 
     def schedule_hyperparameters(self, timestep: int, max_timesteps: int):
