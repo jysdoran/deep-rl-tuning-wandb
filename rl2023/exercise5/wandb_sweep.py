@@ -2,7 +2,7 @@ import sys
 import gym
 import wandb
 
-from rl2023.exercise5.train_ddpg import BIPEDAL_CONFIG, train, NUM_SEEDS_SWEEP
+from rl2023.exercise5.train_ddpg import BIPEDAL_CONFIG, BIPEDAL_CONSTANTS, train, NUM_SEEDS_SWEEP
 from rl2023.util.result_processing import WANDB_PROJECT
 
 HPARAMS = {
@@ -26,8 +26,8 @@ sweep_configuration = {
 }
 
 def run_agent():
-    CONFIG = BIPEDAL_CONFIG
-
+    # Do not include any of the
+    CONFIG = BIPEDAL_CONSTANTS
     env_0 = gym.make(CONFIG["env"])
     env = env_0
 
