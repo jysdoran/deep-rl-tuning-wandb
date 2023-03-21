@@ -14,7 +14,7 @@ from rl2023.constants import EX3_DQN_ACROBOT_CONSTANTS as ACROBOT_CONSTANTS
 from rl2023.exercise3.agents import DQN
 from rl2023.exercise3.replay import ReplayBuffer
 from rl2023.util.hparam_sweeping import generate_hparam_configs
-from rl2023.util.result_processing import Run
+from rl2023.util.result_processing import Run, wandb_data_objects
 
 RENDER = False # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
 SWEEP = True # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
@@ -32,7 +32,7 @@ CARTPOLE_CONFIG = {
     "hidden_size": (256, 256),
     "target_update_freq": 10,
     "batch_size": 64,
-    "epsilon_decay_strategy": "constant", #"constant" or "linear" or "exponential"
+    "epsilon_decay_strategy": "linear", #"constant" or "linear" or "exponential"
     "epsilon_start": .25,
     "epsilon_min": 0.04, #only used in linear and exponential decay strategies
     "epsilon_decay": None, #For exponential epsilon decay
@@ -140,17 +140,20 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     """
     timesteps_elapsed = 0
 
+    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config)
+    config = run_data.run.config
+
     agent = DQN(
         action_space=env.action_space, observation_space=env.observation_space, **config
     )
     replay_buffer = ReplayBuffer(config["buffer_capacity"])
 
-    eval_returns_all = []
-    eval_timesteps_all = []
-    eval_times_all = []
+    # eval_returns_all = []
+    # eval_timesteps_all = []
+    # eval_times_all = []
+    # run_data = defaultdict(list)
 
     start_time = time.time()
-    run_data = defaultdict(list)
     with tqdm(total=config["max_timesteps"]) as pbar:
         while timesteps_elapsed < config["max_timesteps"]:
             elapsed_seconds = time.time() - start_time
@@ -237,7 +240,8 @@ if __name__ == "__main__":
     else:
         raise(ValueError(f"Unknown environment {ENV}"))
 
-    env = gym.make(CONFIG["env"])
+    env_0 = gym.make(CONFIG["env"])
+    env = env_0
 
     if SWEEP and HPARAMS_SWEEP is not None:
         config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
@@ -248,11 +252,13 @@ if __name__ == "__main__":
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
+                env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}", episode_trigger=lambda x: x % 100 == 0)
                 print(f"\nTraining iteration: {i+1}/{NUM_SEEDS_SWEEP}")
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
                 eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
+                run_data.run.finish()
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "
