@@ -3,7 +3,7 @@ import wandb
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-WANDB_MODE = ("disabled", "online")[0]
+WANDB_MODE = ("disabled", "online")[1]
 WANDB_PROJECT = "rl-coursework-q5"
 
 
@@ -49,6 +49,7 @@ def wandb_data_objects(config):
             return super().setdefault(key, WandBList(key, self.buffer, send=self.send, step=self.step))
 
     run = wandb.init(project=WANDB_PROJECT, mode=WANDB_MODE, reinit=True, config=config)
+    wandb.define_metric("eval_mean_return", summary="max")
     eval_buffer = {}
     eval_returns = WandBList("eval_mean_return", eval_buffer)
     eval_timesteps = WandBList("timesteps_elapsed", eval_buffer)
