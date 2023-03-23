@@ -3,7 +3,7 @@ import wandb
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-WANDB_MODE = ("disabled", "online")[0]
+WANDB_MODE = ("disabled", "online")[1]
 WANDB_PROJECT = "rl-coursework-q2"
 
 

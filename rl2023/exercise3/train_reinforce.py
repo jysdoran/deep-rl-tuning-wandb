@@ -11,13 +11,13 @@ from typing import List, Tuple, Dict
 from rl2023.constants import EX3_REINFORCE_ACROBOT_CONSTANTS as ACROBOT_CONSTANTS
 from rl2023.exercise3.agents import Reinforce
 from rl2023.util.hparam_sweeping import generate_hparam_configs
-from rl2023.util.result_processing import Run
+from rl2023.util.result_processing import Run, wandb_data_objects
 
-RENDER = False # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
-SWEEP = True # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
-NUM_SEEDS_SWEEP = 10 # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
-SWEEP_SAVE_RESULTS = True # TRUE TO SAVE SWEEP RESULTS TO A FILE
-SWEEP_SAVE_ALL_WEIGTHS = False # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
+RENDER = False  # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
+SWEEP = True  # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
+NUM_SEEDS_SWEEP = 10  # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
+SWEEP_SAVE_RESULTS = True  # TRUE TO SAVE SWEEP RESULTS TO A FILE
+SWEEP_SAVE_ALL_WEIGTHS = False  # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
 ENV = "ACROBOT"
 
 ACROBOT_CONFIG = {
@@ -31,18 +31,18 @@ ACROBOT_CONFIG.update(ACROBOT_CONSTANTS)
 
 ACROBOT_HPARAMS = {
     "learning_rate": [6e-1, 6e-2, 6e-3],
-    }
+}
 
 SWEEP_RESULTS_FILE_ACROBOT = "Reinforce-Acrobot-sweep-results.pkl"
 
 
 def play_episode(
-    env: gym.Env,
-    agent: Reinforce,
-    train: bool = True,
-    explore=True,
-    render=False,
-    max_steps=200,
+        env: gym.Env,
+        agent: Reinforce,
+        train: bool = True,
+        explore=True,
+        render=False,
+        max_steps=200,
 ) -> Tuple[int, float, Dict]:
     """
     Play one episode and train reinforce algorithm
@@ -106,15 +106,19 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     """
     timesteps_elapsed = 0
 
+    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config,
+                                                                                        project="rl-coursework-q2")
+    config = run_data.run.config
+
     agent = Reinforce(
         action_space=env.action_space, observation_space=env.observation_space, **config
     )
 
     total_steps = config["max_timesteps"]
-    eval_returns_all = []
-    eval_timesteps_all = []
-    eval_times_all = []
-    run_data = defaultdict(list)
+    # eval_returns_all = []
+    # eval_timesteps_all = []
+    # eval_times_all = []
+    # run_data = defaultdict(list)
 
     start_time = time.time()
     with tqdm(total=total_steps) as pbar:
@@ -180,7 +184,7 @@ if __name__ == "__main__":
         HPARAMS_SWEEP = ACROBOT_HPARAMS
         SWEEP_RESULTS_FILE = SWEEP_RESULTS_FILE_ACROBOT
     else:
-        raise(ValueError(f"Unknown environment {ENV}"))
+        raise (ValueError(f"Unknown environment {ENV}"))
 
     env = gym.make(CONFIG["env"])
 
@@ -193,7 +197,7 @@ if __name__ == "__main__":
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
-                print(f"\nTraining iteration: {i+1}/{NUM_SEEDS_SWEEP}")
+                print(f"\nTraining iteration: {i + 1}/{NUM_SEEDS_SWEEP}")
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
