@@ -17,12 +17,12 @@ from rl2023.exercise3.replay import ReplayBuffer
 from rl2023.util.hparam_sweeping import generate_hparam_configs
 from rl2023.util.result_processing import Run, wandb_data_objects
 
-RENDER = False # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
-SWEEP = True # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
-NUM_SEEDS_SWEEP = 10 # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
-SWEEP_SAVE_RESULTS = True # TRUE TO SAVE SWEEP RESULTS TO A FILE
-SWEEP_SAVE_ALL_WEIGTHS = False # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
-ENV = "BIPEDAL" #"PENDULUM" OR "BIPEDAL"
+RENDER = False  # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
+SWEEP = True  # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
+NUM_SEEDS_SWEEP = 3  # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
+SWEEP_SAVE_RESULTS = True  # TRUE TO SAVE SWEEP RESULTS TO A FILE
+SWEEP_SAVE_ALL_WEIGTHS = False  # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
+ENV = "BIPEDAL"  # "PENDULUM" OR "BIPEDAL"
 WANDB_SWEEP = True
 
 PENDULUM_CONFIG = {
@@ -47,12 +47,11 @@ BIPEDAL_CONFIG.update(BIPEDAL_CONSTANTS)
 # BIPEDAL_CONFIG["max_timesteps"] = 20000
 
 ### INCLUDE YOUR CHOICE OF HYPERPARAMETERS HERE ###
-hidden_sizes = [[512, 256, 128, 64], [512, 256, 128], [256, 128, 64], [512, 256], [256, 128], [128, 64], [512], [128]]
-# hidden_sizes = [[64]]
+hidden_sizes = [[1024, 512], [512, 256], [256, 128], [128, 64], [64, 32]]
 BIPEDAL_HPARAMS = {
     "critic_hidden_size": hidden_sizes,
     "policy_hidden_size": hidden_sizes,
-    }
+}
 
 SWEEP_RESULTS_FILE_BIPEDAL = "DDPG-Bipedal-sweep-results-ex4.pkl"
 
@@ -67,7 +66,6 @@ def play_episode(
         max_steps=200,
         batch_size=64,
 ):
-
     ep_data = defaultdict(list)
     obs = env.reset()
     done = False
@@ -126,7 +124,6 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
         action_space=env.action_space, observation_space=env.observation_space, **config
     )
     replay_buffer = ReplayBuffer(config["buffer_capacity"])
-
 
     start_time = time.time()
     with tqdm(total=config["max_timesteps"]) as pbar:
@@ -191,14 +188,14 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
 if __name__ == "__main__":
     if ENV == "PENDULUM":
         CONFIG = PENDULUM_CONFIG
-        HPARAMS_SWEEP = None # Not required for assignment
-        SWEEP_RESULTS_FILE = None # Not required for assignment
+        HPARAMS_SWEEP = None  # Not required for assignment
+        SWEEP_RESULTS_FILE = None  # Not required for assignment
     elif ENV == "BIPEDAL":
         CONFIG = BIPEDAL_CONFIG
         HPARAMS_SWEEP = BIPEDAL_HPARAMS
         SWEEP_RESULTS_FILE = SWEEP_RESULTS_FILE_BIPEDAL
     else:
-        raise(ValueError(f"Unknown environment {ENV}"))
+        raise (ValueError(f"Unknown environment {ENV}"))
 
     env_0 = gym.make(CONFIG["env"])
     env = env_0
@@ -216,14 +213,13 @@ if __name__ == "__main__":
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
                 # env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}", episode_trigger=lambda x: x % 100 == 0)
-                print(f"\nTraining iteration: {i+1}/{NUM_SEEDS_SWEEP}")
+                print(f"\nTraining iteration: {i + 1}/{NUM_SEEDS_SWEEP}")
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
                 eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
                 if WANDB_SWEEP:
                     run.set_save_filename(run_data.run.name)
-                    run_data.run.finish()
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "

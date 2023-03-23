@@ -3,7 +3,7 @@ import gym
 import wandb
 
 from rl2023.exercise4.train_ddpg import BIPEDAL_HPARAMS, WANDB_SWEEP, BIPEDAL_CONFIG, train, NUM_SEEDS_SWEEP
-from rl2023.util.result_processing import Run, wandb_data_objects, WANDB_PROJECT
+from rl2023.util.result_processing import WANDB_PROJECT
 
 sweep_configuration = {
     'program': 'train_ddpg.py',
@@ -32,4 +32,4 @@ if __name__ == '__main__':
         sweep_id = sys.argv[1]
         wandb.agent(sweep_id, function=run_agent)
     else:
-        sweep_id = wandb.sweep(sweep_configuration, project=WANDB_PROJECT)
+        sweep_id = wandb.sweep(sweep_configuration, project="rl-coursework-q4")

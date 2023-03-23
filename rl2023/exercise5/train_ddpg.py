@@ -26,12 +26,12 @@ ENV = "BIPEDAL" # "ACROBOT" is also possible if you uncomment the corresponding 
 # IN EXERCISE 5 YOU SHOULD TUNE PARAMETERS IN THIS CONFIG ONLY
 BIPEDAL_CONFIG = {
     "policy_learning_rate": 1e-4,
-    "critic_learning_rate": 1e-3,
-    "critic_hidden_size": [64, 64],
-    "policy_hidden_size": [64, 64],
+    "critic_learning_rate": 5e-4,
+    "critic_hidden_size": [256, 64],
+    "policy_hidden_size": [256, 64],
     "gamma": 0.99,
-    "tau": 0.2,
-    "batch_size": 64,
+    "tau": 0.05,
+    "batch_size": 32,
     "gamma": 0.99,
     "buffer_capacity": int(1e6),
 }

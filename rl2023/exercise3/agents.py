@@ -415,14 +415,13 @@ class Reinforce(Agent):
         actions = np.array(actions)
         n = len(observations)
 
-        returns = Tensor(rewards)
-        returns.requires_grad = False
+        returns = np.array(rewards)
         for i in range(len(returns) - 2, -1, -1):
             returns[i] += self.gamma * returns[i + 1]
 
         # Compute the loss
         action_probs = self.policy(Tensor(observations))[range(n), actions]
-        loss = (-action_probs.log() * returns).mean()
+        loss = (-action_probs.log() * Tensor(returns)).mean()
 
         self.policy_optim.zero_grad()
         loss.backward()

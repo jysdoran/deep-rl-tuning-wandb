@@ -3,11 +3,11 @@ import wandb
 from typing import Dict, List, Tuple
 from collections import defaultdict
 
-WANDB_MODE = ("disabled", "online")[1]
-WANDB_PROJECT = "rl-coursework-q5"
+WANDB_MODE = ("disabled", "online")[0]
+WANDB_PROJECT = "rl-coursework-q2"
 
 
-def wandb_data_objects(config):
+def wandb_data_objects(config, project=WANDB_PROJECT):
     # wrappers for lists and dict that log to wandb on append
     class WandBList(list):
         def __init__(self, name, buffer, send="time", step="timesteps_elapsed"):
@@ -48,7 +48,7 @@ def wandb_data_objects(config):
         def __getitem__(self, key):
             return super().setdefault(key, WandBList(key, self.buffer, send=self.send, step=self.step))
 
-    run = wandb.init(project=WANDB_PROJECT, mode=WANDB_MODE, reinit=True, config=config)
+    run = wandb.init(project=project, mode=WANDB_MODE, reinit=True, config=config)
     wandb.define_metric("eval_mean_return", summary="max")
     eval_buffer = {}
     eval_returns = WandBList("eval_mean_return", eval_buffer)
@@ -79,6 +79,8 @@ class Run:
 
     def update(self, eval_returns, eval_timesteps, times=None, run_data=None):
         run_id = len(self._run_ids)
+        if run_data is not None:
+            run_data.run.finish()
 
         # with wandb.init(project=WANDB_PROJECT, mode=WANDB_MODE, config=self._config, tags=self._tags,
         #                 reinit=True) as run:
@@ -119,7 +121,7 @@ class Run:
         if times is not None:
             self._train_times.append(list(times)[-1])
         if run_data is not None:
-            self._run_data.append(dict(run_data))
+            self._run_data.append({k: list(v) for k, v in run_data.items()})
 
     def set_save_filename(self, filename):
         if self._config["save_filename"] is not None:

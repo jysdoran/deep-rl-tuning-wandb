@@ -140,7 +140,7 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     """
     timesteps_elapsed = 0
 
-    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config)
+    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config, project="rl-coursework-q3")
     config = run_data.run.config
 
     agent = DQN(
@@ -252,13 +252,12 @@ if __name__ == "__main__":
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
-                env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}", episode_trigger=lambda x: x % 100 == 0)
+                # env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}", episode_trigger=lambda x: x % 100 == 0)
                 print(f"\nTraining iteration: {i+1}/{NUM_SEEDS_SWEEP}")
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
                 eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
-                run_data.run.finish()
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "
