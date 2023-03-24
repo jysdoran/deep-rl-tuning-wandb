@@ -9,7 +9,7 @@ RENDER = True
 
 # CONFIG = PENDULUM_CONFIG
 
-BIPEDAL_CONFIG["batch_norm"] = True
+# BIPEDAL_CONFIG["batch_norm"] = True
 CONFIG = BIPEDAL_CONFIG
 
 
