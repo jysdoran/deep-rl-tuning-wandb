@@ -107,7 +107,7 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     timesteps_elapsed = 0
 
     eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config,
-                                                                                        project="rl-coursework-q2")
+                                                                                        project="rl-coursework-q3")
     config = run_data.run.config
 
     agent = Reinforce(

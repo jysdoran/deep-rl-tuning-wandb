@@ -18,12 +18,11 @@ from rl2023.util.hparam_sweeping import generate_hparam_configs
 from rl2023.util.result_processing import Run, wandb_data_objects
 
 RENDER = False  # FALSE FOR FASTER TRAINING / TRUE TO VISUALIZE ENVIRONMENT DURING EVALUATION
-SWEEP = True  # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
+SWEEP = False  # TRUE TO SWEEP OVER POSSIBLE HYPERPARAMETER CONFIGURATIONS
 NUM_SEEDS_SWEEP = 3  # NUMBER OF SEEDS TO USE FOR EACH HYPERPARAMETER CONFIGURATION
 SWEEP_SAVE_RESULTS = True  # TRUE TO SAVE SWEEP RESULTS TO A FILE
 SWEEP_SAVE_ALL_WEIGTHS = False  # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
 ENV = "BIPEDAL"  # "PENDULUM" OR "BIPEDAL"
-WANDB_SWEEP = True
 
 PENDULUM_CONFIG = {
     "eval_freq": 2000,
@@ -39,12 +38,10 @@ PENDULUM_CONFIG = {
 PENDULUM_CONFIG.update(PENDULUM_CONSTANTS)
 
 BIPEDAL_CONFIG = {
-    "critic_hidden_size": [64, 64],
-    "policy_hidden_size": [64, 64],
+    "critic_hidden_size": [1024, 512],
+    "policy_hidden_size": [256, 128],
 }
 BIPEDAL_CONFIG.update(BIPEDAL_CONSTANTS)
-# BIPEDAL_CONFIG["eval_episodes"] = 3
-# BIPEDAL_CONFIG["max_timesteps"] = 20000
 
 ### INCLUDE YOUR CHOICE OF HYPERPARAMETERS HERE ###
 hidden_sizes = [[1024, 512], [512, 256], [256, 128], [128, 64], [64, 32]]
@@ -117,7 +114,8 @@ def train(env: gym.Env, config, output: bool = True) -> Tuple[np.ndarray, np.nda
     timesteps_elapsed = 0
 
     # eval_returns_all, eval_timesteps_all, eval_times_all, run_data = [], [], [], defaultdict(list)
-    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config)
+    eval_returns_all, eval_timesteps_all, eval_times_all, run_data = wandb_data_objects(config,
+                                                                                        project="rl-coursework-q4")
     config = run_data.run.config
 
     agent = DDPG(
@@ -201,10 +199,7 @@ if __name__ == "__main__":
     env = env_0
 
     if SWEEP and HPARAMS_SWEEP is not None:
-        if WANDB_SWEEP:
-            config_list, swept_params = [CONFIG.copy()], HPARAMS_SWEEP
-        else:
-            config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
+        config_list, swept_params = generate_hparam_configs(CONFIG, HPARAMS_SWEEP)
         results = []
         for config in config_list:
             run = Run(config, tags=["Q4", "DDPG"])
@@ -212,14 +207,13 @@ if __name__ == "__main__":
             run.run_name = hparams_values
             print(f"\nStarting new run...")
             for i in range(NUM_SEEDS_SWEEP):
-                # env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}", episode_trigger=lambda x: x % 100 == 0)
+                env = gym.wrappers.RecordVideo(env_0, "videos", name_prefix=f"{run.run_name}{i}",
+                                               episode_trigger=lambda x: x % 100 == 0)
                 print(f"\nTraining iteration: {i + 1}/{NUM_SEEDS_SWEEP}")
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
                 eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
-                if WANDB_SWEEP:
-                    run.set_save_filename(run_data.run.name)
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "

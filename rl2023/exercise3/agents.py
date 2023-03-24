@@ -388,7 +388,7 @@ class Reinforce(Agent):
         """
         ### PUT YOUR CODE HERE ###
         with torch.no_grad():
-            distribution = self.policy(Tensor(obs).unsqueeze(0)).squeeze(0)
+            distribution = self.policy(Tensor(obs))
         if explore:
             action = Categorical(distribution).sample().item()
         else:
