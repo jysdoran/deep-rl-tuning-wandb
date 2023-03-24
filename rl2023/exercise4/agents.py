@@ -163,11 +163,12 @@ class DDPG(Agent):
         save_path = os.path.join(dir_path, filename)
         checkpoint = torch.load(save_path)
         for k, v in self.saveables.items():
-            if None in (checkpoint[k], v):
-                if checkpoint[k] != v:
-                    raise ValueError("Model {} is not None in checkpoint but None in agent".format(k))
+            if None not in (checkpoint[k], v):
+                v.load_state_dict(checkpoint[k].state_dict())
+            elif checkpoint[k] != v:
+                raise ValueError("Model {} is not None in checkpoint but None in agent".format(k))
 
-            v.load_state_dict(checkpoint[k].state_dict())
+
 
 
 
