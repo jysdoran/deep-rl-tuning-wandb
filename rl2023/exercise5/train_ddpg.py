@@ -24,15 +24,24 @@ SWEEP_SAVE_ALL_WEIGTHS = False # TRUE TO SAVE ALL WEIGHTS FROM EACH SEED
 ENV = "BIPEDAL" # "ACROBOT" is also possible if you uncomment the corresponding code, but is not assessed for DQN.
 
 # IN EXERCISE 5 YOU SHOULD TUNE PARAMETERS IN THIS CONFIG ONLY
+# BIPEDAL_CONFIG = {
+#     "policy_learning_rate": 1e-4,
+#     "critic_learning_rate": 5e-4,
+#     "critic_hidden_size": [256, 64],
+#     "policy_hidden_size": [256, 64],
+#     "gamma": 0.99,
+#     "tau": 0.05,
+#     "batch_size": 32,
+#     "buffer_capacity": int(1e6),
+# }
 BIPEDAL_CONFIG = {
-    "policy_learning_rate": 1e-4,
+    "policy_learning_rate": 1e-3,
     "critic_learning_rate": 5e-4,
-    "critic_hidden_size": [256, 64],
-    "policy_hidden_size": [256, 64],
+    "critic_hidden_size": [1024, 512],
+    "policy_hidden_size": [256, 128],
     "gamma": 0.99,
-    "tau": 0.05,
-    "batch_size": 32,
-    "gamma": 0.99,
+    "tau": 0.02,
+    "batch_size": 128,
     "buffer_capacity": int(1e6),
 }
 BIPEDAL_CONFIG.update(BIPEDAL_CONSTANTS)

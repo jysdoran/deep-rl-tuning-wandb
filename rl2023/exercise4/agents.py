@@ -92,7 +92,6 @@ class DDPG(Agent):
         self.policy_optim = Adam(self.actor.parameters(), lr=policy_learning_rate, eps=1e-3)
         self.critic_optim = Adam(self.critic.parameters(), lr=critic_learning_rate, eps=1e-3)
 
-
         # ############################################# #
         # WRITE ANY HYPERPARAMETERS YOU MIGHT NEED HERE #
         # ############################################# #
@@ -124,18 +123,17 @@ class DDPG(Agent):
                 "critic_target": self.critic_target,
                 "policy_optim": self.policy_optim,
                 "critic_optim": self.critic_optim,
-                "actor_batch_norm": self.actor_batch_norm,
             }
         )
 
         # GPU support
-        # self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        # turns out it's pretty slow on GPU
-        self.device = torch.device("cpu")
+        # This only helps if the network is large enough to outweigh the overhead
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         for k, model in self.saveables.items():
-            if not k.endswith("optim") and model is not None:
+            if not k.endswith("_optim") and model is not None:
                 model.to(self.device)
-
+        if self.actor_batch_norm is not None:
+            self.actor_batch_norm.to(self.device)
 
     def save(self, path: str, suffix: str = "") -> str:
         """Saves saveable PyTorch models under given path
@@ -147,9 +145,11 @@ class DDPG(Agent):
         :param suffix (str, optional): suffix given to models file
         :return (str): path to file of saved models file
         """
-        torch.save(self.saveables, path)
+        save_dict = self.saveables.copy()
+        if self.actor_batch_norm is not None:
+            save_dict["actor_batch_norm"] = self.actor_batch_norm
+        torch.save({k: v if k.endswith("_optim") else v.to("cpu") for k, v in save_dict.items()}, path)
         return path
-
 
     def restore(self, filename: str, dir_path: str = None):
         """Restores PyTorch models from models file given by path
@@ -163,14 +163,12 @@ class DDPG(Agent):
         save_path = os.path.join(dir_path, filename)
         checkpoint = torch.load(save_path)
         for k, v in self.saveables.items():
-            if None not in (checkpoint[k], v):
-                v.load_state_dict(checkpoint[k].state_dict())
-            elif checkpoint[k] != v:
-                raise ValueError("Model {} is not None in checkpoint but None in agent".format(k))
+            v.load_state_dict(checkpoint[k].state_dict())
 
-
-
-
+        if "actor_batch_norm" in checkpoint:
+            if self.actor_batch_norm is None:
+                raise ValueError("Cannot restore batch norm state if not used in agent")
+            self.actor_batch_norm.load_state_dict(checkpoint["actor_batch_norm"].state_dict())
 
     def schedule_hyperparameters(self, timestep: int, max_timesteps: int):
         """Updates the hyperparameters
@@ -183,8 +181,22 @@ class DDPG(Agent):
         :param timestep (int): current timestep at the beginning of the episode
         :param max_timestep (int): maximum timesteps that the training loop will run for
         """
-        ### PUT YOUR CODE HERE ###
-        pass
+        r = timestep / max_timesteps
+
+        def linear_decay(fraction, start, end):
+            if r < fraction:
+                return start + r * (end - start) / fraction
+            else:
+                return end
+
+        def exponential_decay(current, start, end, decay_factor):
+            if current > end:
+                new_epsilon = np.float_power(decay_factor, r) * start
+                return max(new_epsilon, end)
+            else:
+                return end
+
+
 
     def act(self, obs: np.ndarray, explore: bool):
         """Returns an action (should be called at every timestep)
