@@ -74,7 +74,7 @@ if __name__ == "__main__":
                 run_save_filename = '--'.join([run.config["algo"], run.config["env"], hparams_values, str(i)])
                 if SWEEP_SAVE_ALL_WEIGTHS:
                     run.set_save_filename(run_save_filename)
-                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False)
+                eval_returns, eval_timesteps, times, run_data = train(env, run.config, output=False, project="rl-coursework-q5")
                 run.update(eval_returns, eval_timesteps, times, run_data)
             results.append(copy.deepcopy(run))
             print(f"Finished run with hyperparameters {hparams_values}. "
@@ -86,6 +86,6 @@ if __name__ == "__main__":
                 pickle.dump(results, f)
 
     else:
-        _ = train(env, CONFIG)
+        _ = train(env, CONFIG, project="rl-coursework-q5")
 
     env.close()

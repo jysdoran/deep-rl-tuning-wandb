@@ -6,14 +6,14 @@ from rl2023.exercise5.train_ddpg import BIPEDAL_CONFIG, BIPEDAL_CONSTANTS, train
 from rl2023.util.result_processing import WANDB_PROJECT
 
 HPARAMS = {
-    "policy_learning_rate": [1e-3, 5e-4, 1e-4, 5e-5],
-    "critic_learning_rate": [1e-3, 5e-4, 1e-4, 5e-5],
-    "critic_hidden_size": [[512, 256, 128], [256, 128, 64], [512, 256], [256, 128]],
-    "policy_hidden_size": [[512, 256, 128], [256, 128, 64], [512, 256], [256, 128]],
-    "gamma": [1, 0.999, 0.99],
-    "tau": [0.1, 0.05, 0.01, 0.005, 0.001],
-    "batch_size": [256, 128, 64, 32],
-    "buffer_capacity": [int(1e7), int(1e6), int(1e5), int(1e4)],
+    "policy_learning_rate": [1e-3],
+    "critic_learning_rate": [5e-4],
+    "critic_hidden_size": [[1024, 512]],
+    "policy_hidden_size": [[256, 128]],
+    "gamma": [1, 0.999, 0.99, 0.98],
+    "tau": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001],
+    "batch_size": [512, 256, 128, 64, 32],
+    "buffer_capacity": [int(1e7), int(5e6), int(2e6), int(1e6), int(1e5)],
     # "seed": list(range(NUM_SEEDS_SWEEP))
 }
 
