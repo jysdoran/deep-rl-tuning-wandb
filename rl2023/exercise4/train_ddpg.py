@@ -174,6 +174,7 @@ def train(env: gym.Env, config, output: bool = True, project="rl-coursework-q4")
                     pbar.write(
                         f"Reached return {eval_returns} >= target return of {config['target_return']}"
                     )
+                    agent.save(run_data.run.name + ".pt")
                     break
 
     if config["save_filename"]:

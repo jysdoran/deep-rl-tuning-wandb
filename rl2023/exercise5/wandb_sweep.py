@@ -10,18 +10,18 @@ HPARAMS = {
     "critic_learning_rate": [5e-4],
     "critic_hidden_size": [[1024, 512]],
     "policy_hidden_size": [[256, 128]],
-    "gamma": [1, 0.999, 0.99, 0.98],
-    "tau": [0.1, 0.05, 0.01, 0.005, 0.001, 0.0005, 0.0001],
-    "batch_size": [512, 256, 128, 64, 32],
-    "buffer_capacity": [int(1e7), int(5e6), int(2e6), int(1e6), int(1e5)],
-    # "seed": list(range(NUM_SEEDS_SWEEP))
+    "gamma": [0.98, 0.97, 0.96],
+    "tau": [0.1, 0.05, 0.01],
+    "batch_size": [128],
+    "buffer_capacity": [int(1e6)],
+    "seed": list(range(NUM_SEEDS_SWEEP))
 }
 
 sweep_configuration = {
     'program': 'train_ddpg.py',
     'description': 'Sweep over DDPG model parameters for q5',
-    'method': 'bayes',
-    'early_terminate': {'type': 'hyperband', 'min_iter': 5},
+    'method': 'grid',
+    # 'early_terminate': {'type': 'hyperband', 'min_iter': 10},
     'metric': {'goal': 'maximize', 'name': 'eval_mean_return'},
     'parameters': {k: {'values': v} for k, v in HPARAMS.items()}
 }
