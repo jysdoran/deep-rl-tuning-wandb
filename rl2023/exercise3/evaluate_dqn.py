@@ -3,10 +3,10 @@ import pickle
 from typing import List, Tuple
 
 from rl2023.exercise3.agents import DQN
-from rl2023.exercise3.train_dqn import play_episode, CARTPOLE_CONFIG, SWEEP_RESULTS_FILE_CARTPOLE, ACROBOT_CONFIG, SWEEP_RESULTS_FILE_ACROBOT
+from rl2023.exercise3.train_dqn import play_episode, CARTPOLE_CONFIG, SWEEP_RESULTS_FILE_CARTPOLE, ACROBOT_CONFIG#, SWEEP_RESULTS_FILE_ACROBOT
 from rl2023.util.result_processing import Run, get_best_saved_run
 
-ENV = "ACROBOT" # "CARTPOLE" OR "ACROBOT"
+ENV = "CARTPOLE" # "CARTPOLE" OR "ACROBOT"
 RENDER = True
 
 def evaluate(env: gym.Env, config, output: bool = True) -> Tuple[List[float], List[float]]:

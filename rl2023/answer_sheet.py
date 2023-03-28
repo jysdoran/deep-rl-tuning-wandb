@@ -70,7 +70,7 @@ def question3_1() -> str:
     c) 6e-3
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -84,7 +84,7 @@ def question3_2() -> str:
     c) 0.01
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -98,7 +98,7 @@ def question3_3() -> str:
     c) 0.001
     return: (str): your answer as a string. accepted strings: "a", "b" or "c"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b" or "c"
+    answer = "c"  # TYPE YOUR ANSWER HERE "a", "b" or "c"
     return answer
 
 
@@ -114,7 +114,7 @@ def question3_4() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "b"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
@@ -130,7 +130,7 @@ def question3_5() -> str:
     e) it depends on the number of training timesteps
     return: (str): your answer as a string. accepted strings: "a", "b", "c", "d" or "e"
     """
-    answer = ""  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
+    answer = "a"  # TYPE YOUR ANSWER HERE "a", "b", "c", "d" or "e"
     return answer
 
 
@@ -143,7 +143,10 @@ def question3_6() -> str:
     strategy you implemented).
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "With a decay rate parameter, the speed of the decay and the total amount of decay are interlinked. " \
+        "A function with a decay rate of r will never decay lower than r times the start value but with a linear " \
+        "strategy it is possible to set epsilon to reach whatever value you like in whatever timeframe."
+    # TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -165,7 +168,8 @@ def question3_8() -> str:
     the DQN training process.
     return: answer (str): your answer as a string (100 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (100 words max)
+    answer = "The spikes correspond to when the target network is hard-updated to match the current critic model. " \
+        "The better trained critic model becomes a more difficult target to match for itself. "# TYPE YOUR ANSWER HERE (100 words max)
     return answer
 
 
@@ -180,5 +184,5 @@ def question5_1() -> str:
     the best performance of your agents
     return: answer (str): your answer as a string (200 words max)
     """
-    answer = ""  # TYPE YOUR ANSWER HERE (200 words max)
+    answer = "Sparse random search over many things with wandb. Freeze weights and learning rate (according to papers)"  # TYPE YOUR ANSWER HERE (200 words max)
     return answer
