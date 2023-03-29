@@ -389,10 +389,11 @@ class Reinforce(Agent):
         ### PUT YOUR CODE HERE ###
         with torch.no_grad():
             distribution = self.policy(Tensor(obs))
-        if explore:
-            action = Categorical(distribution).sample().item()
-        else:
-            action = distribution.argmax().item()
+
+            if explore:
+                action = Categorical(distribution).sample().item()
+            else:
+                action = distribution.argmax().item()
 
         return action
 
@@ -420,7 +421,15 @@ class Reinforce(Agent):
             returns[i] += self.gamma * returns[i + 1]
 
         # Compute the loss
-        action_probs = self.policy(Tensor(observations))[range(n), actions]
+        action_probs = self.policy(Tensor(observations))[np.arange(n), actions]
+        if not action_probs.all():
+            print("action_probs", action_probs)
+            print("observations", observations)
+            print("actions", actions)
+            print("rewards", rewards)
+            print("returns", returns)
+            print("policy_grid", self.policy(Tensor(observations)))
+            raise ValueError("action_probs contains 0")
         loss = (-action_probs.log() * Tensor(returns)).mean()
 
         self.policy_optim.zero_grad()
