@@ -5,6 +5,9 @@ from rl2023.exercise2.agents import MonteCarloAgent
 from rl2023.exercise2.utils import evaluate
 from tqdm import tqdm
 
+import wandb
+from rl2023.util.result_processing import WandBList
+
 CONFIG = {
     "eval_freq": 5000, # keep this unchanged
     "epsilon": 0.9,
@@ -59,8 +62,16 @@ def train(env, config):
     max_steps = config["total_eps"] * config["eps_max_steps"]
 
     total_reward = 0
-    evaluation_return_means = []
-    evaluation_negative_returns = []
+
+    wandb.init(project="rl-coursework-q2", config=config)
+    buffer = {}
+    evaluation_return_means = WandBList("eval_mean_return", buffer, send="episode")
+    evaluation_negative_returns = WandBList("eval_neg_return", buffer, send="episode")
+    timesteps_elapsed = WandBList("timesteps_elapsed", buffer, send="episode")
+    episode = WandBList("episode", buffer, send="episode")
+
+    # evaluation_return_means = []
+    # evaluation_negative_returns = []
 
     for eps_num in tqdm(range(1, config["total_eps"] + 1)):
         obs = env.reset()
@@ -96,6 +107,8 @@ def train(env, config):
             tqdm.write(f"EVALUATION: EP {eps_num} - MEAN RETURN {mean_return}")
             evaluation_return_means.append(mean_return)
             evaluation_negative_returns.append(negative_returns)
+            timesteps_elapsed.append(step_counter)
+            episode.append(eps_num)
 
     return total_reward, evaluation_return_means, evaluation_negative_returns, agent.q_table
 

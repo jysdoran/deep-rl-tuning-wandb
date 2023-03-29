@@ -1,5 +1,6 @@
 import itertools
 import torch
+import numpy as np
 from typing import Dict, List, Tuple, Iterable
 
 
@@ -38,8 +39,10 @@ def grid_search(num_samples: int, min: float = None, max: float = None, **kwargs
     **YOU MAY IMPLEMENT THIS FUNCTION FOR Q5**
 
     """
-    raise NotImplementedError
-    values = torch.zeros(num_samples)
+    if kwargs.get("log"):
+        values = np.logspace(min, max, num_samples)
+    else:
+        values = np.linspace(min, max, num_samples)
     return values
 
 
@@ -57,6 +60,12 @@ def random_search(num_samples: int, distribution: str, min: float=None, max: flo
     **YOU MAY IMPLEMENT THIS FUNCTION FOR Q5**
 
     """
-    raise NotImplementedError
-    values = torch.zeros(num_samples)
+    values = None
+    if distribution == "uniform":
+        values = np.random.uniform(min, max, num_samples)
+    elif distribution == "exponential":
+        values = np.random.exponential(kwargs.get("lambda"), num_samples)
+    elif distribution == "choice":
+        values = np.random.choice(kwargs.get("choices"), num_samples)
+
     return values

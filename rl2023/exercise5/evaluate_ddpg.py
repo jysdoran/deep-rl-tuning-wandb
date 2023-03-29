@@ -9,6 +9,7 @@ from rl2023.exercise5.train_ddpg \
 RENDER = True
 
 CONFIG = BIPEDAL_CONFIG
+CONFIG["save_filename"] = "/home/james/School/RL/uoe-rl2023-coursework/rl2023/exercise5/bipedal_q5_latest.pt"
 
 if __name__ == "__main__":
     env = gym.make(CONFIG["env"])

@@ -164,6 +164,7 @@ class PolicyIteration(MDPSolver):
         """
         V = np.zeros(self.state_dim)
         ### PUT YOUR CODE HERE ###
+        # This initialisation is just to get into the loop
         V_old = np.full_like(V, self.theta + 1)
         while np.abs(V_old - V).max() > self.theta:
             V_old = V

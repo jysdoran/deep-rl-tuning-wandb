@@ -7,47 +7,49 @@ WANDB_MODE = ("disabled", "online")[1]
 WANDB_PROJECT = "rl-coursework-q5"
 
 
+class WandBList(list):
+    def __init__(self, name, buffer, send="time", step="timesteps_elapsed"):
+        self.name = name
+        self.step = step
+        self.send = send
+        self.buffer = buffer
+        super().__init__()
+
+    @staticmethod
+    def process(x):
+        if isinstance(x, list):
+            return np.mean(x)
+        return x
+
+    def append(self, x):
+        super().append(x)
+        self.buffer[self.name] = x
+        if self.name == self.send:
+            wandb.log({k: self.process(v) for k, v in self.buffer.items()}, step=self.buffer[self.step])
+            self.buffer.clear()
+
+    def extend(self, x):
+        super().extend(x)
+        self.buffer.setdefault(self.name, []).extend(x)
+        if self.name == self.send:
+            wandb.log(self.buffer, step=self.buffer[self.step])
+            self.buffer.clear()
+
+
+class WandBRunData(dict):
+    def __init__(self, run, step="train_ep_timesteps", send="train_ep_timesteps"):
+        self.run = run
+        self.step = step
+        self.send = send
+        self.buffer = {}
+        super().__init__()
+
+    def __getitem__(self, key):
+        return super().setdefault(key, WandBList(key, self.buffer, send=self.send, step=self.step))
+
+
 def wandb_data_objects(config, project=WANDB_PROJECT):
     # wrappers for lists and dict that log to wandb on append
-    class WandBList(list):
-        def __init__(self, name, buffer, send="time", step="timesteps_elapsed"):
-            self.name = name
-            self.step = step
-            self.send = send
-            self.buffer = buffer
-            super().__init__()
-
-        @staticmethod
-        def process(x):
-            if isinstance(x, list):
-                return np.mean(x)
-            return x
-
-        def append(self, x):
-            super().append(x)
-            self.buffer[self.name] = x
-            if self.name == self.send:
-                wandb.log({k: self.process(v) for k, v in self.buffer.items()}, step=self.buffer[self.step])
-                self.buffer.clear()
-
-        def extend(self, x):
-            super().extend(x)
-            self.buffer.setdefault(self.name, []).extend(x)
-            if self.name == self.send:
-                wandb.log(self.buffer, step=self.buffer[self.step])
-                self.buffer.clear()
-
-    class WandBRunData(dict):
-        def __init__(self, run, step="train_ep_timesteps", send="train_ep_timesteps"):
-            self.run = run
-            self.step = step
-            self.send = send
-            self.buffer = {}
-            super().__init__()
-
-        def __getitem__(self, key):
-            return super().setdefault(key, WandBList(key, self.buffer, send=self.send, step=self.step))
-
     run = wandb.init(project=project, mode=WANDB_MODE, reinit=True, config=config)
     wandb.define_metric("eval_mean_return", summary="max")
     eval_buffer = {}
@@ -80,7 +82,8 @@ class Run:
     def update(self, eval_returns, eval_timesteps, times=None, run_data=None):
         run_id = len(self._run_ids)
         if run_data is not None:
-            run_data.run.finish()
+            if hasattr(run_data, "run"):
+                run_data.run.finish()
 
         # with wandb.init(project=WANDB_PROJECT, mode=WANDB_MODE, config=self._config, tags=self._tags,
         #                 reinit=True) as run:
@@ -111,7 +114,7 @@ class Run:
         #             wandb.log({"Mean Eval Return": mean_return}, step=step)
 
         self._run_ids.append(run_id)
-        if self._config['save_filename'] is not None:
+        if self._config.get('save_filename') is not None:
             self._agent_weights_filenames.append(self._config['save_filename'])
             self._config['save_filename'] = None
 
