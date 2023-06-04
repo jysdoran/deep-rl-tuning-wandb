@@ -1,16 +1,5 @@
-# Download
-```console
-git clone https://github.com/uoe-agents/uoe-rl2023-coursework
-```
-
-# Install dependencies using:
-```console
-cd uoe-rl2023-coursework
-pip install -e .
-```
-# Testing your submission 
-Prior to making a submission, you can check if you have included all the required submission files and answered all the questions in answer_sheet.py in the correct format by running
-```console
-cd uoe-rl2023-coursework
-pytest
-```
+# Hyperparameter Tuning for Deep Deterministic Policy Gradient (DDPG) 
+ Derived from following repository: https://github.com/uoe-agents/uoe-rl2023-coursework
+ 
+Algorithm implementations and wandb integration/hyperparameter tuning are my work. 
+The rest of the code is from the above repository. (aside from some refactoring and minor changes)
